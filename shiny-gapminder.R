@@ -1,3 +1,5 @@
+library(shiny)
+
 # Load the gapminder package
 library(gapminder)
 
@@ -11,7 +13,7 @@ ui <- fluidPage(
 server <- function(input, output) {
   output$answer <- renderText({
     # Determine the population of France in year 1972
-    subset(country=="France" & year==1972)$pop
+    subset(gapminder, country=="France" & year==1972)$pop
   })
 }
 
