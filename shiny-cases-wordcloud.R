@@ -4,6 +4,7 @@
 library(tm)
 library(shiny)
 library(wordcloud2)
+library(colourpicker)
 
 
 create_wordcloud <- function(data, num_words = 100, background = "white") {
@@ -38,18 +39,35 @@ create_wordcloud <- function(data, num_words = 100, background = "white") {
 # Define UI for the application
 ui <- fluidPage(
   h1("Word Cloud"),
-  # Add the word cloud output placeholder to the UI
-  wordcloud2Output(outputId = "cloud")
+  sidebarLayout(
+    sidebarPanel(
+      textAreaInput("text", "Enter text", rows = 7),
+      fileInput("file", "Select a file"),
+      numericInput("num", "Maximum number of words",
+                   value = 100, min = 5),
+      colourInput("col", "Background colour", value = "white")
+    ),
+    mainPanel(
+      wordcloud2Output("cloud")
+    )
+  )
 )
 
-# Define the server logic
 server <- function(input, output) {
-  # Render the word cloud and assign it to the output list
+  # Define a reactive variable named `input_file`
+  input_file <- reactive({
+    if (is.null(input$file)) {
+      return("")
+    }
+    # Read the text in the uploaded file
+    readLines(input$file$datapath)
+  })
+  
   output$cloud <- renderWordcloud2({
-    # Create a word cloud object
-    create_wordcloud(artofwar)
+    # Use the reactive variable as the word cloud data source
+    create_wordcloud(data = input_file(), num_words = input$num,
+                     background = input$col)
   })
 }
 
-# Run the application
 shinyApp(ui = ui, server = server)
