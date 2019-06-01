@@ -1,5 +1,6 @@
 # shiny-cases-wordcloud app
-# 20190531
+# created 20190531
+# updated 20190601
 
 library(tm)
 library(shiny)
@@ -41,34 +42,35 @@ ui <- fluidPage(
   h1("Word Cloud"),
   sidebarLayout(
     sidebarPanel(
-
-      # Add radio buttons input
-      radioButtons("source","Word source",
-                   choices = c(
-                     # first choice is "own", with "Use your own words"
-                     "Use your own words" = "own",
-                     # second choice is "file", with "Upload a file"
-                     "Upload a file" = "file"
-                     )
-                   ),
+      radioButtons(
+        inputId = "source",
+        label = "Word source",
+        choices = c(
+          #"Art of War" = "book",
+          "Use your own words" = "own",
+          "Upload a file" = "file"
+        )
+      ),
       conditionalPanel(
-        condition = "input.source == ‘own’",
+        condition = "input.source == 'own'",
         textAreaInput("text", "Enter text", rows = 7)
       ),
       conditionalPanel(
         condition = "input.source == 'file'",
         fileInput("file", "Select a file")
       ),
-
       numericInput("num", "Maximum number of words",
                    value = 100, min = 5),
-      colourInput("col", "Background colour", value = "white")
+      colourInput("col", "Background colour", value = "white"),
+      # Add a "draw" button to the app
+      actionButton(inputId = "draw", label = "Draw!")
     ),
     mainPanel(
       wordcloud2Output("cloud")
     )
   )
 )
+
 
 server <- function(input, output) {
   data_source <- reactive({
@@ -88,6 +90,9 @@ server <- function(input, output) {
   })
   
   output$cloud <- renderWordcloud2({
+    # Add the draw button as a dependency to
+    # cause the word cloud to re-render on click
+    input$draw
     # Isolate the code to render the word cloud so that it will
     # not automatically re-render on every parameter change
     isolate({
