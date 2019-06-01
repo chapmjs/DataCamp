@@ -48,9 +48,17 @@ ui <- fluidPage(
                      "Use your own words" = "own",
                      # second choice is "file", with "Upload a file"
                      "Upload a file" = "file"
-                   )),
-      textAreaInput("text", "Enter text", rows = 7),
-      fileInput("file", "Select a file"),
+                     )
+                   ),
+      conditionalPanel(
+        condition = "input.source == ‘own’",
+        textAreaInput("text", "Enter text", rows = 7)
+      ),
+      conditionalPanel(
+        condition = "input.source == 'file'",
+        fileInput("file", "Select a file")
+      ),
+      
       numericInput("num", "Maximum number of words",
                    value = 100, min = 5),
       colourInput("col", "Background colour", value = "white")
@@ -83,9 +91,11 @@ server <- function(input, output) {
   })
   
   output$cloud <- renderWordcloud2({
+    isolate ({
     # Use the data_source reactive variable as the word cloud data source
-    create_wordcloud(data = data_source(), num_words = input$num,
+      create_wordcloud(data = data_source(), num_words = input$num,
                      background = input$col)
+    })  
   })
 }
 
