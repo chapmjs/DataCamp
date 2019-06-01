@@ -41,16 +41,22 @@ ui <- fluidPage(
   h1("Word Cloud"),
   sidebarLayout(
     sidebarPanel(
-      # Add radio buttons input
-      radioButtons("source","Word source",
-                   choices = c(
-                     # first choice is "own", with "Use your own words"
-                     "Use your own words" = "own",
-                     # second choice is "file", with "Upload a file"
-                     "Upload a file" = "file"
-                   )),
-      textAreaInput("text", "Enter text", rows = 7),
-      fileInput("file", "Select a file"),
+      radioButtons(
+        inputId = "source",
+        label = "Word source",
+        choices = c(
+          "Use your own words" = "own",
+          "Upload a file" = "file"
+        )
+      ),
+      conditionalPanel(
+        condition = "input.source == 'own'",
+        textAreaInput("text", "Enter text", rows = 7)
+      ),
+      conditionalPanel(
+        condition = "input.source == 'file'",
+        fileInput("file", "Select a file")
+      ),
       numericInput("num", "Maximum number of words",
                    value = 100, min = 5),
       colourInput("col", "Background colour", value = "white")
@@ -62,9 +68,7 @@ ui <- fluidPage(
 )
 
 server <- function(input, output) {
-  # Create a "data_source" reactive variable
   data_source <- reactive({
-    #Return the appropriate data source depending on the chosen radio button
     if (input$source == "own") {
       data <- input$text
     } else if (input$source == "file") {
@@ -73,19 +77,21 @@ server <- function(input, output) {
     return(data)
   })
   
-  # Define a reactive variable named `input_file`
   input_file <- reactive({
     if (is.null(input$file)) {
       return("")
     }
-    # Read the text in the uploaded file
     readLines(input$file$datapath)
   })
   
   output$cloud <- renderWordcloud2({
-    # Use the data_source reactive variable as the word cloud data source
-    create_wordcloud(data = data_source(), num_words = input$num,
-                     background = input$col)
+    # Isolate the code to render the word cloud so that it will
+    # not automatically re-render on every parameter change
+    isolate({
+      # Render the word cloud using inputs and reactives
+      create_wordcloud(data = data_source(), num_words = input$num,
+                       background = input$col)
+    })
   })
 }
 
